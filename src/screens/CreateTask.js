@@ -4,6 +4,8 @@ import { auth, db } from "../firebaseConfig";
 import { collection, getDocs, query, where, addDoc, doc, getDoc } from "firebase/firestore";
 import MultiSelect from "react-native-multiple-select";
 import { Picker } from "@react-native-picker/picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import * as Notifications from 'expo-notifications';
 
 export default function Dashboard({ navigation }) {
   const [tasks, setTasks] = useState([]);
@@ -14,9 +16,18 @@ export default function Dashboard({ navigation }) {
   const [assignedUsers, setAssignedUsers] = useState([]); 
   const [taskPriority, setTaskPriority] = useState("Low"); 
   const [taskStatus, setTaskStatus] = useState("Pending"); 
+  const [dueDate, setDueDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [users, setUsers] = useState([]);
+  const [selectedReminderTime, setSelectedReminderTime] = useState('5');
+
+  const handleReminderChange = (itemValue) => {
+    setSelectedReminderTime(itemValue);
+  };
 
   const user = auth.currentUser;
+
+  const [reminderTime, setReminderTime] = useState(5); // set default reminder time to 5 minutes
 
   //function to prevent 'r' from triggering the fast refresh in Expo
   //function called in input text boxes
@@ -70,35 +81,77 @@ export default function Dashboard({ navigation }) {
 
 
 // Create new task and add to Firebase
-  const handleCreateTask = async () => {
-    if (!taskName || assignedUsers.length === 0) {
-      Alert.alert("Error", "Task name and assigned users are required.");
-      return;
+const handleCreateTask = async () => {
+  if (!taskName || assignedUsers.length === 0 || !dueDate) {
+    Alert.alert("Error", "Task name, assigned users, and due date are required.");
+    return;
+  }
+
+  // Calculate the reminder time (in milliseconds)
+  let reminderTimestamp = null;
+  if (reminderTime > 0) {
+    reminderTimestamp = new Date(dueDate).getTime() - reminderTime * 60 * 1000; // Subtract reminder time (in minutes)
+  }
+
+  // Task details; can be altered
+  try {
+    await addDoc(collection(db, "tasks"), {
+      name: taskName,
+      description: taskDescription,
+      priority: taskPriority,
+      status: taskStatus,
+      assignedUsers,
+      dueDate: dueDate, // Save the dueDate directly
+      reminderTime: reminderTimestamp,
+      createdAt: new Date(),
+    });
+
+    // Reset form fields
+    setTaskName("");
+    setTaskDescription("");
+    setAssignedUsers([]);
+    setTaskPriority("Low");
+    setTaskStatus("Pending");
+
+    // If reminder is set, schedule the notification
+    if (reminderTimestamp) {
+      scheduleReminder(reminderTimestamp);
     }
 
-    // Task details; can be altered
-    try {
-      await addDoc(collection(db, "tasks"), {
-        name: taskName,
-        description: taskDescription,
-        priority: taskPriority,
-        status: taskStatus,
-        assignedUsers,
-        createdAt: new Date(),
-      });
+    // Show success message and navigate
+    Alert.alert("Success", "Task created successfully!");
+    navigation.navigate("Main");
+  } catch (error) {
+    Alert.alert("Error", "Failed to create task: " + error.message);
+  }
+};
 
-      setTaskName("");
-      setTaskDescription("");
-      setAssignedUsers([]);
-      setTaskPriority("Low");
-      setTaskStatus("Pending");
+   // Function to show date picker
+   const showDatePickerHandler = () => {
+    setShowDatePicker(true);
+  };
 
-      // notification messages
-      Alert.alert("Success", "Task created successfully!");
-      navigation.navigate("Main");
-    } catch (error) {
-      Alert.alert("Error", "Failed to create task: " + error.message);
-    }
+  // Handle date change from the picker
+  const handleDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || dueDate;
+    setShowDatePicker(false);
+    setDueDate(currentDate);
+  };
+
+// Function to schedule the reminder notification using Expo
+const scheduleReminder = async (reminderTimestamp) => {
+    const reminderTime = new Date(reminderTimestamp);
+  
+    // Schedule a local notification (using Expo Notifications)
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Reminder: Task is due soon!",
+        body: "You have a task reminder.",
+      },
+      trigger: {
+        date: reminderTime, // Schedule at the reminder time
+      },
+    });
   };
 
 
@@ -148,16 +201,40 @@ export default function Dashboard({ navigation }) {
                 padding: 8,
               }}
             />
+            <Text style={styles.sectionTitle}>Task Priority</Text>
             <Picker selectedValue={taskPriority} onValueChange={setTaskPriority} style={styles.input}>
               <Picker.Item label="Low" value="Low" />
               <Picker.Item label="Medium" value="Medium" />
               <Picker.Item label="High" value="High" />
             </Picker>
+            <Text style={styles.sectionTitle}>Task Status</Text>
             <Picker selectedValue={taskStatus} onValueChange={setTaskStatus} style={styles.input}>
               <Picker.Item label="Pending" value="Pending" />
               <Picker.Item label="In Progress" value="In Progress" />
               <Picker.Item label="Completed" value="Completed" />
             </Picker>
+            <Text style={styles.sectionTitle}>Reminder Time</Text>
+            <Picker selectedValue={selectedReminderTime} // Bind the state variable here
+                    onValueChange={handleReminderChange} // Update the state on value change
+            >
+            <Picker.Item label="5 minutes" value="5" />
+            <Picker.Item label="10 minutes" value="10" />
+            <Picker.Item label="15 minutes" value="15" />
+            <Picker.Item label="30 minutes" value="30" />
+            </Picker>
+
+            {/* Due Date Section */}
+            <Text style={styles.sectionTitle}>Due Date and Time</Text>
+            <Button title={`Select Due Date: ${dueDate.toLocaleString()}`} onPress={showDatePickerHandler} />
+            {showDatePicker && (
+              <DateTimePicker
+                value={dueDate}
+                mode="datetime"
+                display="default"
+                onChange={handleDateChange}
+              />
+            )}
+
             <Button title="Create Task" onPress={handleCreateTask} />
           </View>
           

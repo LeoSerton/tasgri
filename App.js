@@ -15,6 +15,7 @@ import Profile from "./src/screens/Profile";
 import Weather from "./src/screens/Weather";
 import CreateTask from "./src/screens/CreateTask";
 import TaskDetail from "./src/screens/TaskDetail";
+import CalendarScreen from "./src/screens/Calendar";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -34,6 +35,8 @@ function BottomTabs() {
         iconName = focused ? "person" : "person-outline";
       } else if (route.name === "Weather") {
         iconName = focused ? "cloud" : "cloud-outline";
+      } else if (route.name === "Calendar") {
+        iconName = focused ? "calendar" : "calendar-outline";
       }
       return <Ionicons name={iconName} size={size} color={color} />;
     },
@@ -44,8 +47,8 @@ function BottomTabs() {
 >
   <Tab.Screen name="Dashboard" component={Dashboard} />
   <Tab.Screen name="Weather" component={Weather} />
+  <Tab.Screen name="Calendar" component={CalendarScreen} />
   <Tab.Screen name="Profile" component={Profile} />
-  {/* <Tab.Screen name="CreateTask" component={CreateTask} /> */}
 </Tab.Navigator>
   );
 }
@@ -76,6 +79,7 @@ export default function App() {
         <Stack.Screen name="Main" component={BottomTabs} />
         <Stack.Screen name="CreateTask" component={CreateTask} />
         <Stack.Screen name="TaskDetail" component={TaskDetail} />
+        <Stack.Screen name="Calendar" component={CalendarScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

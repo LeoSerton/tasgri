@@ -2,13 +2,14 @@ import React, { useEffect, useState } from "react";
 import { View, Text, Button, StyleSheet, FlatList, Alert } from "react-native";
 import { auth, db } from "../firebaseConfig";
 import { signOut } from "firebase/auth";
-import { collection, getDocs, query, where, doc, getDoc, onSnapshot } from "firebase/firestore";
+import { collection, getDocs, query, where, doc, getDoc, onSnapshot, orderBy } from "firebase/firestore";
 import { FAB } from "react-native-paper"; 
 
 export default function Dashboard({ navigation }) {
   const [tasks, setTasks] = useState([]);
   const [userName, setUserName] = useState(""); 
   const [users, setUsers] = useState([]);
+  const [selectedReminderTime, setSelectedReminderTime] = useState('5');
 
   const user = auth.currentUser;
   
@@ -21,8 +22,8 @@ export default function Dashboard({ navigation }) {
           const userDocRef = doc(db, "users", user.uid);
           const userDoc = await getDoc(userDocRef);
           if (userDoc.exists()) {
-            const { name, surname } = userDoc.data();
-            setUserName(`${name} ${surname}`);
+            const { name } = userDoc.data();
+            setUserName(`${name}`);
           } else {
             console.log("User document not found in Firestore.");
           }
@@ -81,17 +82,6 @@ export default function Dashboard({ navigation }) {
     }, [user]);
   
 
-// simple Logout function; navigates to Login page
-  const handleLogout = () => {
-    signOut(auth)
-      .then(() => {
-        Alert.alert("Logged Out", "You have been logged out.");
-        navigation.replace("Login");
-      })
-      .catch((error) => {
-        Alert.alert("Error", "Failed to log out: " + error.message);
-      });
-  };
 
 
   const handleAddTask = () => {
@@ -128,6 +118,9 @@ export default function Dashboard({ navigation }) {
             })
             .join(", ")}
         </Text>
+        <Text style={styles.taskDetails}>
+          Due Date: {item.dueDate ? item.dueDate.toDate().toLocaleString() : "No due date"}
+        </Text>
         <Button 
           title="View Details"
           onPress={() => navigation.navigate("TaskDetail", { taskId: item.id })}
@@ -155,7 +148,6 @@ export default function Dashboard({ navigation }) {
       keyExtractor={(item) => item.id}
       renderItem={renderTask}
       ListEmptyComponent={<Text style={styles.noTasks}>No tasks assigned to you yet.</Text>}
-      ListFooterComponent={<Button title="Log Out" onPress={handleLogout} />}
       
     />
   );
