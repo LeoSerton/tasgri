@@ -1,80 +1,85 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, Button, StyleSheet } from "react-native";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth, db } from "../firebaseConfig";
-import { doc, setDoc } from "firebase/firestore";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, Button, Alert } from "react-native";
+import { signOut, auth } from "firebase/auth";
+import { db } from "../firebaseConfig";
+import { doc, getDoc } from "firebase/firestore";
 
-export default function SignupScreen({ navigation }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [surname, setSurname] = useState("");
+export default function Profile({ navigation }) {
+  const [userDetails, setUserDetails] = useState(null);
 
-  // function to prevent 'r' refresh in expo
-  const handleKeyPress = (e) => {
-    if (e.nativeEvent.key === "r" || e.nativeEvent.key === "R") {
-      e.preventDefault(); 
-    }
-  };
-  
+  // Fetch the user details from Firestore when the component mounts
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        const userDocRef = doc(db, "users", auth.currentUser.uid); // Get user document from 'users' collection
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+          setUserDetails(userDoc.data()); // Set user data to state
+        } else {
+          console.log("User document not found.");
+        }
+      } catch (error) {
+        Alert.alert("Error", "Failed to fetch user details: " + error.message);
+      }
+    };
 
-  const handleSignup = async () => {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+    fetchUserDetails();
+  }, []);
 
-      // Save user details in Firestore Users collection and auth db
-      await setDoc(doc(db, "users", user.uid), {
-        name,
-        surname,
-        email,
-        createdAt: new Date(),
+  // Handle logout
+  const handleLogout = () => {
+    signOut(auth)
+      .then(() => {
+        Alert.alert("Logged Out", "You have been logged out.");
+        navigation.replace("Login");
+      })
+      .catch((error) => {
+        Alert.alert("Error", "Failed to log out: " + error.message);
       });
+  };
 
-      alert("Signup Successful! Please login.");
-      navigation.navigate("Login");
-    } catch (error) {
-      alert("Signup Failed: " + error.message);
-    }
+  // Handle account deletion
+  const handleDeleteAccount = () => {
+    const user = auth.currentUser;
+
+    // Delete user data from Firestore
+    const deleteUserData = async () => {
+      try {
+        await deleteDoc(doc(db, "users", user.uid)); // Remove user from Firestore
+        await deleteUser(user); // Delete user from Firebase Authentication
+        Alert.alert("Account Deleted", "Your account has been deleted.");
+        navigation.replace("Login");
+      } catch (error) {
+        Alert.alert("Error", "Failed to delete account: " + error.message);
+      }
+    };
+
+    Alert.alert(
+      "Confirm Deletion",
+      "Are you sure you want to delete your account? This action cannot be undone.",
+      [
+        { text: "Cancel" },
+        { text: "Delete", onPress: deleteUserData },
+      ]
+    );
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Signup</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="First Name"
-        value={name}
-        onChangeText={setName}
-        // call funtion to prevent 'r' refresh in expo
-        onKeyPress={handleKeyPress}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Last Name"
-        value={surname}
-        onChangeText={setSurname}
-        // call funtion to prevent 'r' refresh in expo
-        onKeyPress={handleKeyPress}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        // call funtion to prevent 'r' refresh in expo
-        onKeyPress={handleKeyPress}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-        // call funtion to prevent 'r' refresh in expo
-        onKeyPress={handleKeyPress}
-      />
-      <Button title="Signup" onPress={handleSignup} />
+      <Text style={styles.text}>Profile Screen</Text>
+
+      {userDetails ? (
+        <View style={styles.detailsContainer}>
+          <Text style={styles.detailsText}>Name: {userDetails.name} {userDetails.surname}</Text>
+          <Text style={styles.detailsText}>Email: {auth.currentUser.email}</Text>
+        </View>
+      ) : (
+        <Text>Loading...</Text>
+      )}
+
+      <Button title="Log Out" onPress={handleLogout} />
+      <Button title="Delete Account" onPress={handleDeleteAccount} color="red" />
     </View>
   );
 }
@@ -83,19 +88,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-    padding: 16,
+    alignItems: "center",
+    backgroundColor: "#f3f4f6",
+    padding: 20,
   },
-  heading: {
-    fontSize: 24,
+  text: {
+    fontSize: 20,
     fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 16,
+    color: "#333",
   },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 16,
+  detailsContainer: {
+    marginBottom: 20,
+  },
+  detailsText: {
+    fontSize: 16,
+    marginBottom: 10,
   },
 });
