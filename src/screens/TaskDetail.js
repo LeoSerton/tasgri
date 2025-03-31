@@ -26,7 +26,7 @@ export default function TaskDetails({ route }) {
           setTask(taskData);
           setTaskPriority(taskData.priority);
           setTaskStatus(taskData.status);
-          setImageUri(taskData.imageUri || null); // Set imageUri if it exists
+          setImageUri(taskData.imageUri || null); // Set imageUri if it exists in Firestore db
         } else {
           Alert.alert("Error", "Task not found.");
         }
@@ -50,7 +50,7 @@ export default function TaskDetails({ route }) {
       });
 
       Alert.alert("Success", "Task updated successfully!");
-      navigation.goBack(); // Go back to dashboard
+      navigation.goBack(); // Redirect back to dashboard
     } catch (error) {
       Alert.alert("Error", "Failed to update task: " + error.message);
     }

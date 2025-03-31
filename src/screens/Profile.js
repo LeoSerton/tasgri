@@ -1,119 +1,3 @@
-// import React, { useState, useEffect } from "react";
-// import { View, Text, StyleSheet, Button, Alert } from "react-native";
-// import { signOut, deleteUser } from "firebase/auth";
-// import { auth } from "../firebaseConfig";
-// import { doc, getDoc, deleteDoc } from "firebase/firestore";
-// import { db } from "../firebaseConfig";
-
-// export default function Profile({ navigation }) {
-//   const [userDetails, setUserDetails] = useState(null);
-
-//   useEffect(() => {
-//     const fetchUserDetails = async () => {
-//       if (!auth.currentUser) {
-//         Alert.alert("Error", "No authenticated user found.");
-//         return;
-//       }
-
-//       try {
-//         const userDocRef = doc(db, "users", auth.currentUser.uid);
-//         const userDoc = await getDoc(userDocRef);
-//         if (userDoc.exists()) {
-//           setUserDetails(userDoc.data());
-//         } else {
-//           console.log("User document not found");
-//         }
-//       } catch (error) {
-//         Alert.alert("Error", "Failed to fetch user details: " + error.message);
-//       }
-//     };
-
-//     fetchUserDetails();
-//   }, []);
-
-//   // Handle logout
-//   const handleLogout = () => {
-//     signOut(auth)
-//       .then(() => {
-//         Alert.alert("Logged Out", "You have been logged out.");
-//         navigation.replace("Login");
-//       })
-//       .catch((error) => {
-//         Alert.alert("Error", "Failed to log out: " + error.message);
-//       });
-//   };
-
-//   // Handle account deletion
-//   const handleDeleteAccount = () => {
-//     const user = auth.currentUser;
-
-//     if (!user) {
-//       Alert.alert("Error", "No authenticated user found.");
-//       return;
-//     }
-
-//     // Delete user data from Firestore
-//     const deleteUserData = async () => {
-//       try {
-//         await deleteDoc(doc(db, "users", user.uid));
-//         await deleteUser(user);
-//         Alert.alert("Account Deleted", "Your account has been deleted.");
-//         navigation.replace("Login");
-//       } catch (error) {
-//         Alert.alert("Error", "Failed to delete account: " + error.message);
-//       }
-//     };
-
-//     Alert.alert(
-//       "Confirm Deletion",
-//       "Are you sure you want to delete your account? This action cannot be undone.",
-//       [
-//         { text: "Cancel" },
-//         { text: "Delete", onPress: deleteUserData },
-//       ]
-//     );
-//   };
-
-//   return (
-//     <View style={styles.container}>
-
-//       {auth.currentUser && userDetails ? (
-//         <View style={styles.detailsContainer}>
-//           <Text style={styles.detailsText}>Name: {userDetails.name} {userDetails.surname}</Text>
-//           <Text style={styles.detailsText}>Email: {auth.currentUser.email}</Text>
-//         </View>
-//       ) : (
-//         <Text>Loading...</Text>
-//       )}
-
-//       <Button title="Log Out" onPress={handleLogout} />
-//       <Button title="Delete Account" onPress={handleDeleteAccount} color="red" />
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     justifyContent: "center",
-//     alignItems: "center",
-//     backgroundColor: "#f3f4f6",
-//     padding: 20,
-//   },
-//   text: {
-//     fontSize: 20,
-//     fontWeight: "bold",
-//     color: "#333",
-//   },
-//   detailsContainer: {
-//     marginBottom: 20,
-//   },
-//   detailsText: {
-//     fontSize: 16,
-//     marginBottom: 10,
-//   },
-// });
-
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, Button, TextInput, Alert, Image } from "react-native";
 import { signOut, deleteUser } from "firebase/auth";
@@ -121,13 +5,13 @@ import { auth, db } from "../firebaseConfig";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { launchImageLibrary } from "react-native-image-picker";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { v4 as uuidv4 } from "uuid"; // For generating unique image names
+import { v4 as uuidv4 } from "uuid"; 
 
 export default function Profile({ navigation }) {
   const [userDetails, setUserDetails] = useState(null);
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
-  const [profilePic, setProfilePic] = useState(null); // Holds the selected profile picture
+  const [profilePic, setProfilePic] = useState(null); 
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -155,7 +39,7 @@ export default function Profile({ navigation }) {
     fetchUserDetails();
   }, []);
 
-  // Handle logout
+  // Function to handle logout
   const handleLogout = () => {
     signOut(auth)
       .then(() => {
@@ -167,7 +51,7 @@ export default function Profile({ navigation }) {
       });
   };
 
-  // Handle account deletion
+  // Funtion to handle account deletion
   const handleDeleteAccount = () => {
     const user = auth.currentUser;
 
@@ -176,7 +60,7 @@ export default function Profile({ navigation }) {
       return;
     }
 
-    // Delete user data from Firestore
+    // Delete user data from Firestore, permanently
     const deleteUserData = async () => {
       try {
         await deleteDoc(doc(db, "users", user.uid));
@@ -211,8 +95,8 @@ export default function Profile({ navigation }) {
         } else if (response.errorMessage) {
           console.log("ImagePicker Error: ", response.errorMessage);
         } else {
-          const source = { uri: response.assets[0].uri }; // Ensure correct asset reference
-          setProfilePic(source); // Set selected image as the new profile picture
+          const source = { uri: response.assets[0].uri }; 
+          setProfilePic(source); 
         }
       }
     );

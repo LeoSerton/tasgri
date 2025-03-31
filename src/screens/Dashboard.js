@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, Button, StyleSheet, FlatList, Alert } from "react-native";
 import { auth, db } from "../firebaseConfig";
-import { signOut } from "firebase/auth";
-import { collection, getDocs, query, where, doc, getDoc, onSnapshot, orderBy } from "firebase/firestore";
+import { collection, getDocs, query, where, doc, getDoc, onSnapshot } from "firebase/firestore";
 import { FAB } from "react-native-paper"; 
 
 export default function Dashboard({ navigation }) {
@@ -14,7 +13,7 @@ export default function Dashboard({ navigation }) {
   const user = auth.currentUser;
   
 
-      // Fetch the current logged in user's name from Firestore
+      // Fetch the current logged in user's name and tasks from Firestore
   useEffect(() => {
     const fetchUserName = async () => {
       try {
@@ -88,12 +87,12 @@ export default function Dashboard({ navigation }) {
     navigation.navigate("CreateTask");
   };
 
-  // Fetch and render tasks to display on dashboard with details
+  // Fetch and render tasks to display on dashboard with task details
   const renderTask = ({ item }) => {
     let taskStyle = [styles.taskContainer];
   
     if (item.status === "Completed") {
-      taskStyle.push(styles.completedTask); // Always green for completed tasks
+      taskStyle.push(styles.completedTask); // Completed tasks are always green
     } else {
       // Apply priority-based colors only if not completed
       if (item.priority === "High") {

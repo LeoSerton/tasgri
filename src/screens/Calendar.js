@@ -15,6 +15,7 @@ export default function CalendarScreen() {
     fetchTasks();
   }, []);
 
+    // fetch users from Firestore db
     useEffect(() => {
       const fetchUsers = async () => {
         try {
@@ -32,6 +33,7 @@ export default function CalendarScreen() {
       fetchUsers();
     }, []);
 
+    // Fetch tasks from Firestore
   const fetchTasks = async () => {
     try {
       const tasksSnapshot = await getDocs(collection(db, "tasks"));

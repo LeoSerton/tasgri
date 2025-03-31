@@ -12,7 +12,6 @@ export default function Dashboard({ navigation }) {
   const [userName, setUserName] = useState(""); 
   const [taskName, setTaskName] = useState("");
   const [taskDescription, setTaskDescription] = useState("");
-  // Array for assigning multiple users to a task
   const [assignedUsers, setAssignedUsers] = useState([]); 
   const [taskPriority, setTaskPriority] = useState("Low"); 
   const [taskStatus, setTaskStatus] = useState("Pending"); 
@@ -27,7 +26,7 @@ export default function Dashboard({ navigation }) {
 
   const user = auth.currentUser;
 
-  const [reminderTime, setReminderTime] = useState(5); // set default reminder time to 5 minutes
+  const [reminderTime, setReminderTime] = useState(5); // set default reminder time to desired time
 
   //function to prevent 'r' from triggering the fast refresh in Expo
   //function called in input text boxes
@@ -80,20 +79,20 @@ export default function Dashboard({ navigation }) {
   }, []);
 
 
-// Create new task and add to Firebase
+// Create new task to add to Firebase
 const handleCreateTask = async () => {
   if (!taskName || assignedUsers.length === 0 || !dueDate) {
     Alert.alert("Error", "Task name, assigned users, and due date are required.");
     return;
   }
 
-  // Calculate the reminder time (in milliseconds)
+  // Calculate the reminder time (in milliseconds for firebase)
   let reminderTimestamp = null;
   if (reminderTime > 0) {
     reminderTimestamp = new Date(dueDate).getTime() - reminderTime * 60 * 1000; // Subtract reminder time (in minutes)
   }
 
-  // Task details; can be altered
+  // Task details that can be altered
   try {
     await addDoc(collection(db, "tasks"), {
       name: taskName,
@@ -101,12 +100,12 @@ const handleCreateTask = async () => {
       priority: taskPriority,
       status: taskStatus,
       assignedUsers,
-      dueDate: dueDate, // Save the dueDate directly
+      dueDate: dueDate, 
       reminderTime: reminderTimestamp,
       createdAt: new Date(),
     });
 
-    // Reset form fields
+    // Reset task form fields
     setTaskName("");
     setTaskDescription("");
     setAssignedUsers([]);
@@ -118,7 +117,7 @@ const handleCreateTask = async () => {
       scheduleReminder(reminderTimestamp);
     }
 
-    // Show success message and navigate
+    // Show success message and navigate back to dashboard
     Alert.alert("Success", "Task created successfully!");
     navigation.navigate("Main");
   } catch (error) {
@@ -131,7 +130,7 @@ const handleCreateTask = async () => {
     setShowDatePicker(true);
   };
 
-  // Handle date change from the picker
+  // Function to handle date change from the picker
   const handleDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || dueDate;
     setShowDatePicker(false);
@@ -149,7 +148,7 @@ const scheduleReminder = async (reminderTimestamp) => {
         body: "You have a task reminder.",
       },
       trigger: {
-        date: reminderTime, // Schedule at the reminder time
+        date: reminderTime, 
       },
     });
   };
@@ -159,7 +158,6 @@ const scheduleReminder = async (reminderTimestamp) => {
     <FlatList
       ListHeaderComponent={
         <View style={styles.container}>
-          {/* Task creation form */}
           <View style={styles.createTaskContainer}>
             <Text style={styles.sectionTitle}>Create New Task</Text>
             <TextInput
@@ -214,8 +212,8 @@ const scheduleReminder = async (reminderTimestamp) => {
               <Picker.Item label="Completed" value="Completed" />
             </Picker>
             <Text style={styles.sectionTitle}>Reminder Time</Text>
-            <Picker selectedValue={selectedReminderTime} // Bind the state variable here
-                    onValueChange={handleReminderChange} // Update the state on value change
+            <Picker selectedValue={selectedReminderTime} 
+                    onValueChange={handleReminderChange} 
             >
             <Picker.Item label="5 minutes" value="5" />
             <Picker.Item label="10 minutes" value="10" />
@@ -223,7 +221,6 @@ const scheduleReminder = async (reminderTimestamp) => {
             <Picker.Item label="30 minutes" value="30" />
             </Picker>
 
-            {/* Due Date Section */}
             <Text style={styles.sectionTitle}>Due Date and Time</Text>
             <Button title={`Select Due Date: ${dueDate.toLocaleString()}`} onPress={showDatePickerHandler} />
             {showDatePicker && (
